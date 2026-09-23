@@ -1,28 +1,50 @@
 # Vui
 
-A futuristic, animation-heavy **video player UI concept** with **zero playback functionality**.
+A futuristic streaming interface concept with a cinematic **homepage** and a standalone **video player UI**.
 
-The goal is to give you a premium visual layer you can graft onto an existing video player without bringing in another playback stack.
+Vui is intentionally visual-first: the homepage and player are designed as a premium front-end layer you can connect to your own playback, account, search, recommendation, or C++ application logic later.
 
-## What is included
+## Pages
+
+- `index.html` — streaming homepage / discovery experience
+- `home.css` — homepage visuals and motion
+- `player.html` — original futuristic video player UI
+- `styles.css` — player visuals and motion
+
+## Homepage
+
+The homepage includes:
+
+- Floating glass navigation
+- Large cinematic featured hero
+- Continue-watching rail with progress treatments
+- Trending poster rail with hover expansion
+- Curated collection cards
+- New-release landscape rail
+- Animated planets, grids, light beams, glows, auroras, and microinteractions
+- Responsive desktop, tablet, and mobile layouts
+- Reduced-motion accessibility support
+- No JavaScript dependencies
+
+Cards and the hero currently link to `player.html` as a visual demo flow.
+
+## Player
+
+The player interface includes:
 
 - Glass / depth-based control surfaces
-- Animated ambient lighting and background motion
+- Animated ambient lighting
 - CSS-only progress / scrubber treatment
 - Animated play-state centerpiece
 - Chapter / scene indicator
-- Compact left-side quick action rail
-- Futuristic 4K/HDR status badge
-- Responsive desktop, tablet, and mobile layouts
-- Reduced-motion accessibility support
-- No JavaScript and no playback logic
-- Inline SVG icons and no icon library dependency
+- Quick action rail
+- 4K/HDR status badge
+- Responsive layouts
+- No playback JavaScript or media source
 
 ## Run it
 
-Open `index.html` directly in a browser, or serve the folder with any static server.
-
-Example:
+Open `index.html` directly in a browser, or serve the folder:
 
 ```bash
 python3 -m http.server 8080
@@ -30,31 +52,8 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080`.
 
-## Integrating into an existing player
+## Connecting your own app
 
-The visual layer is split into clear regions:
+For a real application, replace the placeholder content metadata and wire navigation/player controls to your existing logic.
 
-- `.topbar` — media title + global actions
-- `.side-rail` — quick action rail
-- `.center-state` — idle / paused centerpiece
-- `.quality-badge` — quality status
-- `.control-deck` — timeline and main controls
-
-Replace the `.poster` element with your actual video element or place this UI above your existing video using `position: absolute` inside the same player container.
-
-The interface intentionally contains no event handlers, playback state, media source, or JavaScript.
-
-## Design tokens
-
-The main theme variables live at the top of `styles.css`:
-
-```css
-:root {
-  --cyan: #78f5e7;
-  --violet: #a788ff;
-  --panel: rgba(15, 18, 26, 0.58);
-  --text: #f7f8fb;
-}
-```
-
-Swap those values to retheme the whole interface quickly.
+For C++ desktop applications, Vui can be embedded as an HTML/CSS front end using Qt WebEngine, CEF, or WebView2, or rebuilt into QML while retaining the same visual system.
