@@ -1,59 +1,25 @@
-# Vui
+# AutoQA UAE — Capstone handoff
 
-A futuristic streaming interface concept with a cinematic **homepage** and a standalone **video player UI**.
+This branch is a non-destructive handoff because the connected GitHub integration cannot create a new repository. The default `main` branch of Vui was not modified.
 
-Vui is intentionally visual-first: the homepage and player are designed as a premium front-end layer you can connect to your own playback, account, search, recommendation, or C++ application logic later.
+The complete standalone project is attached here as `autoqa-uae.zip`.
 
-## Pages
+## Included
+- FastAPI dashboard/API
+- Playwright same-origin crawler
+- accessibility/DOM checks
+- mobile responsive checks
+- JavaScript/network failure capture
+- safe interaction smoke tests
+- Arabic/English functional parity checks
+- seeded bilingual demo site
+- tests, Docker, and GitHub Actions CI
+- full README and capstone evaluation plan
 
-- `index.html` — streaming homepage / discovery experience
-- `home.css` — homepage visuals and motion
-- `player.html` — original futuristic video player UI
-- `styles.css` — player visuals and motion
+Local validation performed before upload:
+- Python/API tests: 10/10 passed
+- Browser DOM/mobile probe: 7/7 seeded checks detected
+- JavaScript syntax check: passed
+- Full network crawl cannot execute inside the ChatGPT host because Chromium network navigation is administratively blocked; GitHub CI is configured to run it in a normal runner.
 
-## Homepage
-
-The homepage includes:
-
-- Floating glass navigation
-- Large cinematic featured hero
-- Continue-watching rail with progress treatments
-- Trending poster rail with hover expansion
-- Curated collection cards
-- New-release landscape rail
-- Animated planets, grids, light beams, glows, auroras, and microinteractions
-- Responsive desktop, tablet, and mobile layouts
-- Reduced-motion accessibility support
-- No JavaScript dependencies
-
-Cards and the hero currently link to `player.html` as a visual demo flow.
-
-## Player
-
-The player interface includes:
-
-- Glass / depth-based control surfaces
-- Animated ambient lighting
-- CSS-only progress / scrubber treatment
-- Animated play-state centerpiece
-- Chapter / scene indicator
-- Quick action rail
-- 4K/HDR status badge
-- Responsive layouts
-- No playback JavaScript or media source
-
-## Run it
-
-Open `index.html` directly in a browser, or serve the folder:
-
-```bash
-python3 -m http.server 8080
-```
-
-Then open `http://localhost:8080`.
-
-## Connecting your own app
-
-For a real application, replace the placeholder content metadata and wire navigation/player controls to your existing logic.
-
-For C++ desktop applications, Vui can be embedded as an HTML/CSS front end using Qt WebEngine, CEF, or WebView2, or rebuilt into QML while retaining the same visual system.
+Unzip the archive and follow its README.md for setup.
