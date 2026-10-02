@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoQA UAE — Autonomous bilingual web QA</title>
+  <meta name="description" content="Autonomous Arabic/English website QA scanner for accessibility, responsive bugs, broken pages, runtime errors, and bilingual parity.">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="logo">AQ</span><div><strong>AutoQA UAE</strong><small>Autonomous Web QA</small></div></div>
+      <nav>
+        <button class="nav active" data-view="scanner">Scanner</button>
+        <button class="nav" data-view="reports">Recent reports</button>
+        <a class="nav" href="/api/docs" target="_blank">API docs ↗</a>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="dot"></span> Local-first scan engine
+        <small>Same-origin crawling · Safe interactions · EN/AR parity</small>
+      </div>
+    </aside>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">CAPSTONE MVP · v1.0</p>
+        <h1>Find website bugs <span>before users do.</span></h1>
+        <p class="lede">AutoQA crawls a website like a QA engineer, checks desktop and mobile behavior, catches runtime failures, and compares English and Arabic versions for functional parity.</p>
+      </section>
+
+      <section class="panel scan-panel" id="scanner-view">
+        <form id="scan-form">
+          <label for="target">Website URL</label>
+          <div class="url-row">
+            <input id="target" name="target" type="url" placeholder="https://example.com/en" required autocomplete="url">
+            <button class="primary" id="scan-button" type="submit">Run autonomous scan</button>
+          </div>
+          <div class="options">
+            <label><span>Pages</span><input id="max-pages" type="number" min="1" max="30" value="8"></label>
+            <label class="check"><input id="mobile" type="checkbox" checked><span>Mobile checks</span></label>
+            <label class="check"><input id="parity" type="checkbox" checked><span>EN ↔ AR parity</span></label>
+            <label class="check"><input id="interactions" type="checkbox" checked><span>Safe interactions</span></label>
+          </div>
+          <p class="hint">AutoQA stays on the same origin and does not submit forms, purchase items, delete data, or perform destructive actions.</p>
+        </form>
+        <div id="scan-status" class="status hidden">
+          <div class="spinner"></div><div><strong id="status-title">Scanning…</strong><p id="status-message">Launching browser</p></div>
+        </div>
+        <div class="demo-callout">
+          <div><strong>Need a deterministic demo?</strong><p>Use the included bilingual test site. It contains seeded bugs AutoQA should discover.</p></div>
+          <button class="secondary" id="demo-button" type="button">Scan seeded demo</button>
+        </div>
+      </section>
+
+      <section id="report" class="hidden">
+        <div class="report-head">
+          <div><p class="eyebrow">SCAN REPORT</p><h2 id="report-target">—</h2><p id="report-meta" class="muted">—</p></div>
+          <div class="score-ring" id="score-ring"><strong id="score">—</strong><span>/ 100</span></div>
+        </div>
+        <div class="metrics">
+          <article><span>Pages</span><strong id="metric-pages">0</strong></article>
+          <article><span>Critical / High</span><strong id="metric-high">0</strong></article>
+          <article><span>Medium / Low</span><strong id="metric-low">0</strong></article>
+          <article><span>EN↔AR pairs</span><strong id="metric-parity">0</strong></article>
+        </div>
+        <div class="panel issues-panel">
+          <div class="toolbar">
+            <div><h3>Detected issues</h3><p class="muted">Sorted by severity. Evidence comes directly from the browser session.</p></div>
+            <select id="severity-filter" aria-label="Filter severity"><option value="all">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+          </div>
+          <div id="issues"></div>
+        </div>
+        <div class="panel pages-panel">
+          <h3>Pages tested</h3>
+          <div class="table-wrap"><table><thead><tr><th>Page</th><th>Status</th><th>Load</th><th>Links</th><th>JS</th><th>Network</th><th>Interactions</th></tr></thead><tbody id="pages-body"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="reports-view" class="hidden">
+        <div class="panel"><div class="toolbar"><div><h2>Recent reports</h2><p class="muted">Reports persist as local JSON files.</p></div><button class="secondary" id="refresh-reports">Refresh</button></div><div id="recent-reports"></div></div>
+      </section>
+    </main>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
