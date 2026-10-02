@@ -106,6 +106,7 @@ def _locale_pair(url: str) -> tuple[str, str] | None:
 
 
 async def _route_guard(route: Route) -> None:
+    # Block obvious direct private-IP/local requests when scanning public sites.
     if is_obviously_private_url(route.request.url) and route.request.resource_type in {"document", "xhr", "fetch", "script"}:
         await route.abort("blockedbyclient")
     else:
