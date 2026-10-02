@@ -8,7 +8,7 @@ function severityRank(s){return ({critical:0,high:1,medium:2,low:3,info:4})[s] ?
 async function api(path, options={}) {
   const res = await fetch(path, {headers:{'Content-Type':'application/json'}, ...options});
   const data = await res.json().catch(()=>({}));
-  if (!res.ok) throw new Error(data.detail || \`HTTP \${res.status}\`);
+  if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
   return data;
 }
 
@@ -42,7 +42,7 @@ async function startScan(targetOverride=null) {
 
 async function pollScan(id) {
   try {
-    const report = await api(\`/api/scans/\${id}\`);
+    const report = await api(`/api/scans/${id}`);
     $('#status-message').textContent = report.progress_message || report.status;
     if (report.status === 'completed') {
       setScanning(false);
@@ -64,15 +64,15 @@ function renderReport(r) {
   currentReport = r;
   $('#report').classList.remove('hidden');
   $('#report-target').textContent = r.target_url;
-  $('#report-meta').textContent = \`\${r.pages_scanned} pages · \${(r.duration_ms/1000).toFixed(1)} s · \${new Date(r.finished_at).toLocaleString()}\`;
+  $('#report-meta').textContent = `${r.pages_scanned} pages · ${(r.duration_ms/1000).toFixed(1)} s · ${new Date(r.finished_at).toLocaleString()}`;
   $('#score').textContent = r.score ?? '—';
-  $('#score-ring').style.setProperty('--score-angle', \`\${Math.round((r.score||0)*3.6)}deg\`);
+  $('#score-ring').style.setProperty('--score-angle', `${Math.round((r.score||0)*3.6)}deg`);
   $('#metric-pages').textContent = r.pages_scanned;
   $('#metric-high').textContent = r.issues.filter(x=>['critical','high'].includes(x.severity)).length;
   $('#metric-low').textContent = r.issues.filter(x=>['medium','low'].includes(x.severity)).length;
   $('#metric-parity').textContent = r.parity_pairs_checked;
   renderIssues();
-  $('#pages-body').innerHTML = r.pages.map(p => \`<tr><td>\${escapeHtml(p.url)}</td><td><span class="status-code \${(p.status_code||999)<400?'good':'bad'}">\${p.status_code ?? 'ERR'}</span></td><td>\${p.load_ms} ms</td><td>\${p.links_found}</td><td>\${p.console_errors}</td><td>\${p.request_failures}</td><td>\${p.safe_interactions_tested}</td></tr>\`).join('');
+  $('#pages-body').innerHTML = r.pages.map(p => `<tr><td>${escapeHtml(p.url)}</td><td><span class="status-code ${(p.status_code||999)<400?'good':'bad'}">${p.status_code ?? 'ERR'}</span></td><td>${p.load_ms} ms</td><td>${p.links_found}</td><td>${p.console_errors}</td><td>${p.request_failures}</td><td>${p.safe_interactions_tested}</td></tr>`).join('');
   $('#report').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
@@ -80,8 +80,8 @@ function renderIssues() {
   if (!currentReport) return;
   const filter = $('#severity-filter').value;
   const items = [...currentReport.issues].filter(i=>filter==='all'||i.severity===filter).sort((a,b)=>severityRank(a.severity)-severityRank(b.severity));
-  if (!items.length) { $('#issues').innerHTML = \`<div class="empty">No issues match this filter.</div>\`; return; }
-  $('#issues').innerHTML = items.map(i => \`<article class="issue"><div><span class="badge \${i.severity}">\${escapeHtml(i.severity)}</span></div><div><h4>\${escapeHtml(i.title)}</h4><p>\${escapeHtml(i.description)}</p><p class="url">\${escapeHtml(i.page_url)} · \${escapeHtml(i.viewport)}</p>\${i.recommendation?\`<p><strong>Fix:</strong> \${escapeHtml(i.recommendation)}</p>\`:''}<details><summary>Evidence</summary><pre>\${escapeHtml(JSON.stringify(i.evidence,null,2))}</pre></details></div><span class="muted">\${escapeHtml(i.category)}</span></article>\`).join('');
+  if (!items.length) { $('#issues').innerHTML = `<div class="empty">No issues match this filter.</div>`; return; }
+  $('#issues').innerHTML = items.map(i => `<article class="issue"><div><span class="badge ${i.severity}">${escapeHtml(i.severity)}</span></div><div><h4>${escapeHtml(i.title)}</h4><p>${escapeHtml(i.description)}</p><p class="url">${escapeHtml(i.page_url)} · ${escapeHtml(i.viewport)}</p>${i.recommendation?`<p><strong>Fix:</strong> ${escapeHtml(i.recommendation)}</p>`:''}<details><summary>Evidence</summary><pre>${escapeHtml(JSON.stringify(i.evidence,null,2))}</pre></details></div><span class="muted">${escapeHtml(i.category)}</span></article>`).join('');
 }
 
 async function loadReports() {
@@ -89,9 +89,9 @@ async function loadReports() {
   try {
     const list = await api('/api/reports?limit=20');
     if (!list.length) { wrap.innerHTML='<div class="empty">No reports yet.</div>'; return; }
-    wrap.innerHTML = list.map(r=>\`<article class="recent"><div class="score-mini">\${r.score ?? '—'}</div><div><strong>\${escapeHtml(r.target_url)}</strong><small>\${r.pages_scanned} pages · \${r.issues.length} issues · \${new Date(r.created_at).toLocaleString()}</small></div><div><span class="badge \${r.status==='failed'?'critical':'low'}">\${escapeHtml(r.status)}</span></div><button class="secondary" data-report="\${r.scan_id}">Open</button></article>\`).join('');
-    wrap.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click', async()=>{ const r=await api(\`/api/scans/\${b.dataset.report}\`); switchView('scanner'); renderReport(r); }));
-  } catch(e) { wrap.innerHTML=\`<div class="empty">\${escapeHtml(e.message)}</div>\`; }
+    wrap.innerHTML = list.map(r=>`<article class="recent"><div class="score-mini">${r.score ?? '—'}</div><div><strong>${escapeHtml(r.target_url)}</strong><small>${r.pages_scanned} pages · ${r.issues.length} issues · ${new Date(r.created_at).toLocaleString()}</small></div><div><span class="badge ${r.status==='failed'?'critical':'low'}">${escapeHtml(r.status)}</span></div><button class="secondary" data-report="${r.scan_id}">Open</button></article>`).join('');
+    wrap.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click', async()=>{ const r=await api(`/api/scans/${b.dataset.report}`); switchView('scanner'); renderReport(r); }));
+  } catch(e) { wrap.innerHTML=`<div class="empty">${escapeHtml(e.message)}</div>`; }
 }
 
 function switchView(view) {
@@ -103,7 +103,7 @@ function switchView(view) {
 }
 
 $('#scan-form').addEventListener('submit', e=>{e.preventDefault(); startScan();});
-$('#demo-button').addEventListener('click', ()=>{ $('#target').value = \`\${location.origin}/demo/en\`; startScan(\`\${location.origin}/demo/en\`); });
+$('#demo-button').addEventListener('click', ()=>{ $('#target').value = `${location.origin}/demo/en`; startScan(`${location.origin}/demo/en`); });
 $('#severity-filter').addEventListener('change', renderIssues);
 $('#refresh-reports').addEventListener('click', loadReports);
 document.querySelectorAll('.nav[data-view]').forEach(n=>n.addEventListener('click',()=>switchView(n.dataset.view)));
