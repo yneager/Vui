@@ -1,0 +1,11 @@
+services:
+  autoqa:
+    build: .
+    ports:
+      - "4173:4173"
+    volumes:
+      - ./data/scans:/app/data/scans
+    environment:
+      PORT: 4173
+      MAX_SCAN_PAGES: 12
+      ALLOW_PRIVATE_TARGETS: 0
