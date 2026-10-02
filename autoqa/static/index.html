@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AutoQA UAE — Autonomous bilingual web QA</title>
-  <meta name="description" content="Autonomous Arabic/English website QA scanner for accessibility, responsive bugs, broken pages, runtime errors, and bilingual parity.">
+  <meta name="description" content="Autonomous Arabic/English website QA scanner for accessibility, responsive bugs, broken pages, runtime errors, security headers, performance, and bilingual parity.">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -14,19 +14,19 @@
       <nav>
         <button class="nav active" data-view="scanner">Scanner</button>
         <button class="nav" data-view="reports">Recent reports</button>
-        <a class="nav" href="/api/docs" target="_blank">API docs ↗</a>
+        <a class="nav" href="/api/docs" target="_blank" rel="noopener">API docs ↗</a>
       </nav>
       <div class="sidebar-foot">
         <span class="dot"></span> Local-first scan engine
-        <small>Same-origin crawling · Safe interactions · EN/AR parity</small>
+        <small>Safe crawling · Mobile QA · Security checks · EN/AR parity · Regression tracking</small>
       </div>
     </aside>
 
     <main>
       <section class="hero">
-        <p class="eyebrow">CAPSTONE MVP · v1.0</p>
+        <p class="eyebrow">CAPSTONE · v1.1</p>
         <h1>Find website bugs <span>before users do.</span></h1>
-        <p class="lede">AutoQA crawls a website like a QA engineer, checks desktop and mobile behavior, catches runtime failures, and compares English and Arabic versions for functional parity.</p>
+        <p class="lede">AutoQA crawls a site in Chromium, tests desktop and mobile behavior, checks accessibility and security signals, exercises safe UI controls, and compares English and Arabic versions for functional parity.</p>
       </section>
 
       <section class="panel scan-panel" id="scanner-view">
@@ -42,13 +42,15 @@
             <label class="check"><input id="parity" type="checkbox" checked><span>EN ↔ AR parity</span></label>
             <label class="check"><input id="interactions" type="checkbox" checked><span>Safe interactions</span></label>
           </div>
-          <p class="hint">AutoQA stays on the same origin and does not submit forms, purchase items, delete data, or perform destructive actions.</p>
+          <p class="hint">Same-origin crawling. No form submission, purchase, deletion, booking, logout, or unlabeled-button clicks.</p>
         </form>
         <div id="scan-status" class="status hidden">
-          <div class="spinner"></div><div><strong id="status-title">Scanning…</strong><p id="status-message">Launching browser</p></div>
+          <div class="spinner"></div>
+          <div class="status-copy"><strong id="status-title">Scanning…</strong><p id="status-message">Launching browser</p></div>
+          <button class="danger-ghost" id="cancel-button" type="button">Cancel</button>
         </div>
         <div class="demo-callout">
-          <div><strong>Need a deterministic demo?</strong><p>Use the included bilingual test site. It contains seeded bugs AutoQA should discover.</p></div>
+          <div><strong>Need a deterministic demo?</strong><p>The bundled bilingual site contains known accessibility, runtime, responsive and EN/AR parity bugs.</p></div>
           <button class="secondary" id="demo-button" type="button">Scan seeded demo</button>
         </div>
       </section>
@@ -56,29 +58,39 @@
       <section id="report" class="hidden">
         <div class="report-head">
           <div><p class="eyebrow">SCAN REPORT</p><h2 id="report-target">—</h2><p id="report-meta" class="muted">—</p></div>
-          <div class="score-ring" id="score-ring"><strong id="score">—</strong><span>/ 100</span></div>
+          <div class="report-actions">
+            <a class="secondary button-link" id="export-json" href="#">Export JSON</a>
+            <a class="secondary button-link" id="export-html" href="#">Export HTML</a>
+            <div class="score-ring" id="score-ring"><strong id="score">—</strong><span>/ 100</span></div>
+          </div>
         </div>
         <div class="metrics">
           <article><span>Pages</span><strong id="metric-pages">0</strong></article>
           <article><span>Critical / High</span><strong id="metric-high">0</strong></article>
           <article><span>Medium / Low</span><strong id="metric-low">0</strong></article>
           <article><span>EN↔AR pairs</span><strong id="metric-parity">0</strong></article>
+          <article><span>New issues</span><strong id="metric-new">—</strong></article>
+          <article><span>Resolved</span><strong id="metric-resolved">—</strong></article>
         </div>
+        <div id="regression" class="regression panel hidden"></div>
         <div class="panel issues-panel">
           <div class="toolbar">
-            <div><h3>Detected issues</h3><p class="muted">Sorted by severity. Evidence comes directly from the browser session.</p></div>
-            <select id="severity-filter" aria-label="Filter severity"><option value="all">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+            <div><h3>Detected issues</h3><p class="muted">Stable fingerprints let AutoQA distinguish new, resolved and unchanged findings between scans.</p></div>
+            <div class="filters">
+              <select id="category-filter" aria-label="Filter category"><option value="all">All categories</option></select>
+              <select id="severity-filter" aria-label="Filter severity"><option value="all">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="info">Info</option></select>
+            </div>
           </div>
           <div id="issues"></div>
         </div>
         <div class="panel pages-panel">
           <h3>Pages tested</h3>
-          <div class="table-wrap"><table><thead><tr><th>Page</th><th>Status</th><th>Load</th><th>Links</th><th>JS</th><th>Network</th><th>Interactions</th></tr></thead><tbody id="pages-body"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Page</th><th>Status</th><th>Scan</th><th>DCL</th><th>DOM</th><th>Resources</th><th>Transfer</th><th>JS</th><th>Network</th><th>Interactions</th></tr></thead><tbody id="pages-body"></tbody></table></div>
         </div>
       </section>
 
       <section id="reports-view" class="hidden">
-        <div class="panel"><div class="toolbar"><div><h2>Recent reports</h2><p class="muted">Reports persist as local JSON files.</p></div><button class="secondary" id="refresh-reports">Refresh</button></div><div id="recent-reports"></div></div>
+        <div class="panel"><div class="toolbar"><div><h2>Recent reports</h2><p class="muted">Use repeated scans to demonstrate regression detection in your capstone evaluation.</p></div><button class="secondary" id="refresh-reports">Refresh</button></div><div id="recent-reports"></div></div>
       </section>
     </main>
   </div>

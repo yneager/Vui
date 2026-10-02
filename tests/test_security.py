@@ -1,4 +1,4 @@
-from autoqa.security import validate_target_url, same_origin
+from autoqa.security import host_resolves_public, same_origin, validate_target_url
 
 
 def test_blocks_private_targets_by_default():
@@ -12,6 +12,11 @@ def test_blocks_private_targets_by_default():
 
 def test_allows_private_when_explicitly_enabled():
     assert validate_target_url("http://127.0.0.1:8000/demo", allow_private=True) == "http://127.0.0.1:8000/demo"
+
+
+def test_public_literal_and_private_literal_resolution():
+    assert host_resolves_public("8.8.8.8", 443)
+    assert not host_resolves_public("127.0.0.1", 80)
 
 
 def test_same_origin_normalizes_default_ports():

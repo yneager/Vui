@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any, Literal
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 Severity = Literal["critical", "high", "medium", "low", "info"]
-Status = Literal["queued", "running", "completed", "failed"]
+Status = Literal["queued", "running", "completed", "failed", "canceled"]
 
 
 def utc_now() -> str:
@@ -39,6 +39,11 @@ class PageResult(BaseModel):
     lang: str = ""
     direction: str = ""
     load_ms: int = 0
+    dom_content_loaded_ms: int | None = None
+    load_event_ms: int | None = None
+    dom_elements: int = 0
+    resource_count: int = 0
+    transfer_kb: int = 0
     links_found: int = 0
     console_errors: int = 0
     request_failures: int = 0
@@ -62,3 +67,7 @@ class ScanReport(BaseModel):
     error: str | None = None
     progress_message: str = "Queued"
     options: dict[str, Any] = Field(default_factory=dict)
+    baseline_scan_id: str | None = None
+    new_issue_ids: list[str] = Field(default_factory=list)
+    resolved_issue_ids: list[str] = Field(default_factory=list)
+    unchanged_issue_ids: list[str] = Field(default_factory=list)

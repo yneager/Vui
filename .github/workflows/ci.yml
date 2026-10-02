@@ -15,7 +15,11 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: python -m playwright install --with-deps chromium
+      - name: Syntax checks
+        run: |
+          python -m compileall -q autoqa tests scripts
+          node --check autoqa/static/app.js
       - run: python -m pytest -q
       - run: python scripts/browser_probe.py
-      - name: Full seeded-site crawler smoke test
+      - name: Full seeded-site crawler + regression smoke test
         run: python scripts/smoke.py

@@ -1,45 +1,64 @@
-# AutoQA UAE
+# AutoQA UAE v1.1
 
-**Autonomous bilingual web QA for Arabic/English websites.**
+**Autonomous functional, accessibility, responsive, security and Arabic/English parity testing for websites.**
 
-AutoQA UAE crawls a website in a real Chromium browser, checks common release-blocking problems, retests pages at a mobile viewport, and compares English/Arabic counterparts for functional parity. It is designed as a Computer Science capstone that is useful without a training dataset, government integration, or crowdsourcing.
+AutoQA UAE opens a target in a real Chromium browser, crawls same-origin routes, runs deterministic QA checks, exercises a small allow-list of non-destructive UI controls, retests pages at a mobile viewport, and compares `/en` and `/ar` counterparts. It is designed as a Computer Science capstone that does **not** require a training dataset, government integration, crowdsourcing, or an LLM.
 
-## What it detects
+## What v1.1 detects
 
 - Broken/internal pages and HTTP 4xx/5xx responses
-- JavaScript console errors and failed network requests
-- Missing page titles and document language declarations
-- Missing image alt text
-- Unlabelled form controls and nameless buttons
-- Duplicate DOM IDs and insecure password forms on HTTP
-- Mobile horizontal overflow and undersized touch targets
-- Arabic content served without `lang="ar"` / RTL direction
-- EN↔AR mismatches in navigation, form fields, buttons, images, visible-content coverage and important numeric values
+- JavaScript console errors and failed browser requests
+- Missing page titles, H1s, document language and viewport metadata
+- Missing image alt text, labels and accessible names
+- Broken `aria-labelledby` / `aria-describedby` references
+- Duplicate DOM IDs
+- Mobile horizontal overflow and undersized click targets
+- Arabic content with incorrect `lang` or RTL configuration
+- EN↔AR mismatches in navigation, forms, buttons, images, content coverage and important numeric values such as AED prices/percentages
 - Missing Arabic counterpart routes
-- A small allow-list of safe non-destructive UI interactions
+- Mixed-content resources
+- HSTS, CSP, clickjacking, `nosniff` and Referrer-Policy signals
+- Oversized DOM/resource-count/transfer-size heuristics
+- Duplicate page titles across crawled routes
 
-Every result contains severity, page URL, viewport, evidence and a recommended fix.
+Every finding has a stable fingerprint, severity, URL, evidence and recommended fix.
 
-## Product architecture
+## Major v1.1 upgrades
+
+- **Regression tracking:** repeated scans automatically show new, resolved and unchanged findings.
+- **Stable issue fingerprints:** deterministic IDs make before/after comparisons measurable.
+- **Safer interactions:** unlabeled controls are never clicked; interactions run on an isolated browser page and must match a strict safe-text allow-list.
+- **DNS-aware SSRF protection:** public scans validate browser subrequests and redirects, not just the initial URL.
+- **Redirect-aware crawling:** an initial `domain.com → www.domain.com` redirect no longer stops site discovery.
+- **Concurrency control + cancellation:** browser scans are bounded and can be canceled from the dashboard/API.
+- **Performance telemetry:** DOMContentLoaded, DOM size, resource count and browser-reported transfer size are recorded per page.
+- **Exports:** download a report as JSON or standalone HTML.
+- **CI threshold:** the CLI can fail a pipeline when issues reach a chosen severity.
+- **Atomic report storage:** interrupted writes cannot leave half-written scan JSON files.
+
+## Architecture
 
 ```text
-Browser UI
-   │
-   ▼
-FastAPI API ───── JSON report storage
-   │
-   ▼
-Scan orchestrator
-   │
-   ├── same-origin BFS crawler
-   ├── Chromium / Playwright
-   ├── desktop DOM checks
-   ├── safe interaction smoke tests
-   ├── mobile viewport checks
-   └── EN ↔ AR parity engine
+Dashboard / CLI
+      │
+      ▼
+ FastAPI API ───── atomic JSON history / regression baseline
+      │
+      ▼
+ bounded scan queue
+      │
+      ▼
+ Playwright + Chromium
+      │
+      ├── DNS-aware request guard
+      ├── same-origin BFS crawler
+      ├── DOM/accessibility checks
+      ├── response security-header checks
+      ├── isolated safe interactions
+      ├── mobile viewport checks
+      ├── performance telemetry
+      └── EN ↔ AR parity engine
 ```
-
-No LLM is required to produce findings. This keeps results deterministic and makes evaluation straightforward.
 
 ## Quick start
 
@@ -53,9 +72,9 @@ python -m playwright install chromium
 uvicorn autoqa.app:app --host 0.0.0.0 --port 4173
 ```
 
-Open `http://localhost:4173`.
+Open `http://localhost:4173` and click **Scan seeded demo** first.
 
-If Chromium is installed somewhere other than Playwright's default, set:
+If Chromium is installed somewhere other than Playwright's default:
 
 ```bash
 export CHROMIUM_PATH=/path/to/chromium
@@ -67,55 +86,48 @@ export CHROMIUM_PATH=/path/to/chromium
 docker compose up --build
 ```
 
-Then open `http://localhost:4173`.
+## Seeded capstone demo
 
-## Seeded demo
+The bundled `/demo/en` and `/demo/ar` site intentionally contains controlled bugs including missing alt/accessibility names, duplicate IDs, a broken ARIA reference, a JS error, mobile overflow, broken links, unsafe new-tab markup, incomplete Arabic forms, price mismatches, incorrect RTL metadata and a missing Arabic pricing route.
 
-The app includes a bilingual test site under `/demo/en` and `/demo/ar` with intentional bugs:
-
-- missing image alt text
-- empty button accessible name
-- JavaScript console error
-- mobile overflow
-- missing Arabic `lang`/RTL configuration
-- EN/AR form mismatch
-- EN/AR price mismatch
-- missing Arabic pricing route
-- broken internal link
-
-Start AutoQA and click **Scan seeded demo**. The API explicitly permits only this bundled localhost demo; arbitrary private-network targets remain blocked unless `ALLOW_PRIVATE_TARGETS=1` is set by the operator.
+This gives you a deterministic ground-truth benchmark for precision/recall experiments instead of relying only on arbitrary live websites.
 
 ## CLI
 
 ```bash
-python -m autoqa https://example.com --max-pages 8
+python -m autoqa https://example.com/en --max-pages 8
 ```
 
-For a private/staging site you own:
+Use it as a CI quality gate:
+
+```bash
+python -m autoqa https://staging.example.com/en --max-pages 12 --fail-on high
+```
+
+Exit codes:
+
+- `0`: scan completed and threshold not exceeded
+- `1`: issue at/above the selected `--fail-on` threshold
+- `2`: scan itself failed/could not complete
+
+For localhost/private staging systems you control:
 
 ```bash
 python -m autoqa http://127.0.0.1:3000 --allow-private
 ```
 
-## Testing
-
-```bash
-python -m pytest -q
-python scripts/browser_probe.py
-python scripts/smoke.py
-```
-
-`browser_probe.py` is network-free and proves the real Chromium DOM/mobile analysis works. `smoke.py` starts the bundled demo server and runs the complete crawler against it.
-
-GitHub Actions installs Chromium and runs all three levels automatically.
-
 ## API
 
-Interactive OpenAPI docs are available at `/api/docs`.
+Interactive OpenAPI docs: `/api/docs`.
 
-### Start scan
+- `POST /api/scans` — start a scan
+- `GET /api/scans/{id}` — poll/read report
+- `DELETE /api/scans/{id}` — cancel queued/running scan
+- `GET /api/scans/{id}/export.json` — download JSON report
+- `GET /api/scans/{id}/export.html` — download standalone HTML report
+- `GET /api/reports` — recent scans
 
-`POST /api/scans`
+Example request:
 
 ```json
 {
@@ -127,44 +139,55 @@ Interactive OpenAPI docs are available at `/api/docs`.
 }
 ```
 
-### Poll report
-
-`GET /api/scans/{scan_id}`
-
-### Recent reports
-
-`GET /api/reports`
-
 ## Safety model
 
 AutoQA is intentionally conservative:
 
 - only HTTP/HTTPS targets
-- private/reserved/loopback addresses blocked by default
-- same-origin crawl only
-- bounded page count
+- private/reserved/loopback targets blocked by default
+- DNS-aware guards for browser subrequests and redirects
+- same-origin crawl after the initial canonical redirect
+- bounded page count and concurrent browsers
 - no form submission
-- no purchase/payment/delete/logout actions
-- only a restricted class of button interactions
+- no purchase/payment/delete/book/save/logout actions
+- unlabeled buttons are never clicked
+- allowed interactions execute on an isolated page so they do not mutate the crawler state
 
-Use it only on websites you own or have permission to test. The scanner is a capstone/research tool, not a hardened multi-tenant commercial security scanner.
+Set `ALLOW_PRIVATE_TARGETS=1` only in a trusted local/staging environment that you control.
 
-## Capstone evaluation design
+Use AutoQA only on sites you own or have permission to test. It is a capstone/research QA tool, not a hardened multi-tenant commercial security scanner.
 
-A strong report can evaluate three questions:
+## Testing
 
-1. **Detection effectiveness:** seed a benchmark site with known bugs and measure precision/recall by category.
-2. **Bilingual parity:** create paired EN/AR pages with controlled functional/content differences and measure detection rate.
-3. **Exploration efficiency:** compare bugs found per page/request against a simple static-link checker baseline.
+```bash
+python -m compileall -q autoqa tests scripts
+node --check autoqa/static/app.js
+python -m pytest -q
+python scripts/browser_probe.py
+python scripts/smoke.py
+```
 
-Suggested metrics: precision, recall, F1, scan duration, pages visited, interactions attempted, and false-positive rate.
+GitHub Actions installs Chromium and runs syntax checks, the unit/API suite, a real browser DOM probe, the full seeded-site crawler, and a second scan to verify regression fingerprints.
+
+## Capstone evaluation plan
+
+A strong final report can answer four measurable questions:
+
+1. **Detection effectiveness** — seed known bugs and measure precision, recall and F1 by category.
+2. **Bilingual parity effectiveness** — control EN/AR differences and measure detection rate/false positives.
+3. **Exploration efficiency** — compare findings per page/time against a static-link checker baseline.
+4. **Regression stability** — rerun unchanged/fixed seeded sites and measure correct classification of new/resolved/unchanged issues.
+
+Also report scan duration, pages visited, interactions attempted, DOM/resource telemetry and false-positive rate.
 
 ## Scope / limitations
 
-- AutoQA does not bypass CAPTCHAs, bot protection or 2FA.
-- It does not submit forms or test real payments.
-- EN/AR semantic translation quality is not judged; parity is structural/content-based and deterministic.
-- Heavily canvas/WebGL-native interfaces require specialized checks outside this MVP.
+- No CAPTCHA, bot-protection or 2FA bypass.
+- No real form submission or payment testing.
+- Arabic translation *quality* is not judged; parity is deterministic/structural plus selected content tokens.
+- Security-header checks are best-practice signals, not a penetration test.
+- Browser-reported transfer sizes can be incomplete for some cross-origin resources.
+- Canvas/WebGL-heavy applications need specialized visual/state instrumentation.
 - Authenticated scanning can be added later using Playwright storage-state profiles.
 
 ## Suggested capstone title

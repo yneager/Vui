@@ -26,6 +26,26 @@ def _is_public_ip(value: str) -> bool:
     )
 
 
+def host_resolves_public(host: str, port: int) -> bool:
+    """Return True only when every resolved address is public.
+
+    Requiring every address to be public avoids mixed public/private DNS answers and
+    provides a useful defense against accidental SSRF in the browser crawler.
+    """
+    host = host.rstrip(".").lower()
+    if not host or host in _BLOCKED_HOSTS or host.endswith(".local"):
+        return False
+    try:
+        return _is_public_ip(host)
+    except ValueError:
+        pass
+    try:
+        addresses = {item[4][0] for item in socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)}
+    except socket.gaierror:
+        return False
+    return bool(addresses) and all(_is_public_ip(ip) for ip in addresses)
+
+
 def validate_target_url(raw: str, allow_private: bool | None = None) -> str:
     allow_private = ALLOW_PRIVATE_TARGETS if allow_private is None else allow_private
     raw = raw.strip()
@@ -40,40 +60,30 @@ def validate_target_url(raw: str, allow_private: bool | None = None) -> str:
         raise ValueError("Credentials in URLs are not allowed.")
 
     host = parsed.hostname.rstrip(".").lower()
-    if not allow_private:
-        if host in _BLOCKED_HOSTS or host.endswith(".local"):
-            raise ValueError("Private/local network targets are blocked by default.")
-        try:
-            if not _is_public_ip(host):
-                raise ValueError("Private/local network targets are blocked by default.")
-        except ValueError as exc:
-            if "blocked" in str(exc):
-                raise
-            # hostname rather than literal IP
-            try:
-                addresses = {item[4][0] for item in socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80))}
-            except socket.gaierror as dns_exc:
-                raise ValueError(f"Could not resolve host: {host}") from dns_exc
-            if not addresses or any(not _is_public_ip(ip) for ip in addresses):
-                raise ValueError("Target resolves to a private/reserved network address.")
+    port = parsed.port or (443 if parsed.scheme == "https" else 80)
+    if not allow_private and not host_resolves_public(host, port):
+        raise ValueError("Target resolves to a private, reserved, or unavailable network address.")
 
-    port = parsed.port
-    netloc = host if port is None else f"{host}:{port}"
+    netloc = host if parsed.port is None else f"{host}:{parsed.port}"
     path = parsed.path or "/"
     return urlunsplit((parsed.scheme, netloc, path, parsed.query, ""))
 
 
 def same_origin(a: str, b: str) -> bool:
     pa, pb = urlsplit(a), urlsplit(b)
+
     def port(p):
         return p.port or (443 if p.scheme == "https" else 80)
+
     return pa.scheme == pb.scheme and pa.hostname == pb.hostname and port(pa) == port(pb)
 
 
 def is_obviously_private_url(raw: str) -> bool:
-    """Fast request-time guard for redirects/subresources. DNS validation happens at scan start."""
+    """Fast literal/local-name check; DNS-aware checks are handled by RequestGuard."""
     try:
         p = urlsplit(raw)
+        if p.scheme not in {"http", "https"}:
+            return False
         host = (p.hostname or "").lower()
         if host in _BLOCKED_HOSTS or host.endswith(".local"):
             return True
