@@ -8,4 +8,5 @@ services:
     environment:
       PORT: 4173
       MAX_SCAN_PAGES: 12
+      MAX_CONCURRENT_SCANS: 2
       ALLOW_PRIVATE_TARGETS: 0

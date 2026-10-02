@@ -11,4 +11,5 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 PORT = int(os.getenv("PORT", "4173"))
 ALLOW_PRIVATE_TARGETS = os.getenv("ALLOW_PRIVATE_TARGETS", "0") == "1"
 MAX_SCAN_PAGES = min(max(int(os.getenv("MAX_SCAN_PAGES", "12")), 1), 30)
+MAX_CONCURRENT_SCANS = min(max(int(os.getenv("MAX_CONCURRENT_SCANS", "2")), 1), 4)
 CHROMIUM_PATH = os.getenv("CHROMIUM_PATH", "/usr/bin/chromium")

@@ -1,6 +1,6 @@
 [project]
 name = "autoqa-uae"
-version = "1.0.0"
+version = "1.1.0"
 description = "Autonomous bilingual Arabic/English web QA scanner"
 requires-python = ">=3.11"
 dependencies = [

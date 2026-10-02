@@ -22,8 +22,8 @@ def page(lang: str, body: str, *, title: str = "AutoQA Demo", rtl: bool = False,
 @router.get("/demo/en/", response_class=HTMLResponse)
 async def demo_en_home():
     body = """
-<header><nav><a href='/demo/en/'>Home</a><a href='/demo/en/contact'>Contact</a><a href='/demo/en/pricing'>Pricing</a><a href='/demo/en/missing'>Broken link</a><a href='/demo/ar/'>العربية</a></nav></header>
-<main class='wrap'><h1>AutoQA Seeded Demo</h1><div class='card'><h2>Starter plan</h2><p>Only AED 199 per month.</p><img src='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="40"%3E%3Crect width="80" height="40" fill="gray"/%3E%3C/svg%3E'><p>This page intentionally contains known bugs for capstone evaluation.</p><button type='button' aria-label=''></button></div><div class='wide-bug'>Intentional mobile overflow</div></main>
+<header><nav><a href='/demo/en/'>Home</a><a href='/demo/en/contact'>Contact</a><a href='/demo/en/pricing'>Pricing</a><a href='/demo/en/missing'>Broken link</a><a href='https://example.com' target='_blank'>Partner</a><a href='/demo/ar/'>العربية</a></nav></header>
+<main class='wrap'><h1>AutoQA Seeded Demo</h1><div class='card'><h2>Starter plan</h2><p>Only AED 199 per month.</p><img src='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="40"%3E%3Crect width="80" height="40" fill="gray"/%3E%3C/svg%3E'><p id='dup'>This page intentionally contains known bugs for capstone evaluation.</p><span id='dup'>Duplicate ID seed</span><button type='button' aria-label='' aria-describedby='missing-description'></button></div><div class='wide-bug'>Intentional mobile overflow</div></main>
 <script>console.error('AUTOQA_SEEDED_JS_ERROR');</script>
 """
     return page("en", body)
