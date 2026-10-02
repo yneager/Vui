@@ -28,7 +28,7 @@ JS_SNAPSHOT = r"""
   const labelFor = (el) => {
     const id = el.id;
     return !!(el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') ||
-      (id && document.querySelector(\`label[for="\${CSS.escape(id)}"]\`)) || el.closest('label') || el.title);
+      (id && document.querySelector(`label[for="${CSS.escape(id)}"]`)) || el.closest('label') || el.title);
   };
   const unlabeled = [...document.querySelectorAll('input:not([type="hidden"]), select, textarea')]
     .filter(el => !labelFor(el)).map(el => ({tag: el.tagName, type: el.type || '', name: el.name || '', id: el.id || ''}));
